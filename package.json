@@ -1,0 +1,24 @@
+{
+  "name": "api-practice---clients",
+  "version": "1.0.0",
+  "description": "Práctica - Rafael Colmenárez - 26.898.848",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Laboratorio-1-2025-1/API-Practice---Clients.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Laboratorio-1-2025-1/API-Practice---Clients/issues"
+  },
+  "homepage": "https://github.com/Laboratorio-1-2025-1/API-Practice---Clients#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "validator": "^13.12.0"
+  }
+}
