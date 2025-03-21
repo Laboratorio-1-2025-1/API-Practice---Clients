@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Laboratorio-1-2025-1/API-Practice---Clients#readme",
   "dependencies": {
     "express": "^4.21.2",
+    "mssql": "^11.0.1",
     "validator": "^13.12.0"
   }
 }

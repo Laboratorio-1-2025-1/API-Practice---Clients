@@ -3,10 +3,10 @@ const express = require('express');
 const router = express.Router(); 
 const productController = require('../controllers/productController'); 
 
-// Obtener todos los productos 
+// Consultar todos los productos 
 router.get('/', productController.getAllProducts); 
 
-// Obtener un producto por ID 
+// Consultar un producto 
 router.get('/:id', productController.getProductById); 
 
 // Crear un nuevo producto 

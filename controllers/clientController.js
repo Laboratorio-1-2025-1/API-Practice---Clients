@@ -1,89 +1,123 @@
 // controllers/clientController.js 
-// Arreglo en memoria para almacenar clientes 
 const validator = require('validator');
-let clients = []; 
-let nextId = 1; 
+const sql = require('mssql');
+// Ajustes realizado para interacciones con la BD
+const { poolPromise } = require('../db');
 
-// Función para validar correo electrónico
-function isValidEmail(email) {
-    return validator.isEmail(email);
-}
-
-// GET /api/clients - Obtener todos los clientes 
-exports.getAllClients = (req, res) => { 
-res.json(clients); 
-}; 
-
-// GET /api/clients/:id - Obtener un cliente por su ID 
-exports.getClientById = (req, res) => { 
-const id = parseInt(req.params.id, 10); 
-const client = clients.find(p => p.id === id); 
-
-if (!client) { 
-return res.status(404).json({ message: 'Cliente no encontrado' }); 
-} 
-
-res.json(client); 
-}; 
-
-// POST /api/clients - Crear un nuevo cliente 
-exports.createClient = (req, res) => { 
-const { name, lastName, email, phoneNumb } = req.body; 
-
-if (!name || !lastName || !email || !phoneNumb) { 
-return res.status(400).json({ message: 'Se requieren los datos del cliente' }); 
-} 
-
- // Validar el correo electrónico
- if (!isValidEmail(email)) {
-    return res.status(400).json({ message: 'El correo electrónico no es válido' });
-}
-
-const newClient = { 
-id: nextId++, 
-name, 
-lastName,
-email,
-phoneNumb 
-}; 
-
-clients.push(newClient); 
-res.status(201).json(newClient); 
-}; 
-
-// PUT /api/clients/:id - Actualizar un cliente existente 
-exports.updateClient = (req, res) => { 
-const id = parseInt(req.params.id, 10); 
-const { name, lastName, email, phoneNumb } = req.body; 
-const client = clients.find(p => p.id === id); 
-
-if (!client) { 
-return res.status(404).json({ message: 'Cliente no encontrado' }); 
-} 
-
-  // Validar el correo electrónico si es proporcionado
-  if (email && !isValidEmail(email)) {
-    return res.status(400).json({ message: 'El correo electrónico no es válido' });
-}
-
-// Actualizar propiedades solo si se envían en el body 
-if (name !== undefined) client.name = name; 
-if (lastName !== undefined) client.lastName = lastName; 
-if (email !== undefined) client.email = email; 
-if (phoneNumb !== undefined) client.phoneNumb = phoneNumb; 
-
-res.json(client); 
-}; 
-
-// DELETE /api/clients/:id - Eliminar un cliente 
-exports.deleteClient = (req, res) => { 
-const id = parseInt(req.params.id, 10); 
-const index = clients.findIndex(p => p.id === id); 
-
-if (index === -1) { 
-return res.status(404).json({ message: 'Cliente no encontrado' }); 
-} 
-
-const deletedClient = clients.splice(index, 1); 
-res.json({ message: 'Cliente eliminado', client: deletedClient[0] }); 
+// Consultar todos los clientes
+exports.searchClient = async (req, res) => {
+  try {
+      const pool = await poolPromise;
+      const result = await pool.request().query('SELECT * FROM Clientes');
+      res.json(result.recordset);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 };
+
+// Consultar clientes por ID
+exports.searchClientById = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  // Validar que el ID sea válido
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID inválido" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT * FROM Clientes WHERE id = @id');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+
+    res.json(result.recordset[0]); // Retorna el primer resultado encontrado
+  } catch (error) {
+    console.error("Error al consultar cliente:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Crear clientes 
+exports.newClient = async (req, res) => {
+  const { Nombre, Apellido, Telefono, Correo } = req.body;
+
+  //Validación de Correo Electrónico
+  if (!validator.isEmail(Correo)) {
+    return res.status(400).json({ error: "Correo electrónico inválido" });
+  }
+  try {
+      const pool = await poolPromise;
+      await pool.request()
+          .input('Nombre', sql.NVarChar, Nombre)
+          .input('Apellido', sql.NVarChar, Apellido)
+          .input('Telefono', sql.NVarChar, Telefono)
+          .input('Correo', sql.NVarChar, Correo)
+          .query('INSERT INTO Clientes (Nombre, Apellido, Telefono, Correo) VALUES (@Nombre, @Apellido, @Telefono, @Correo)');
+      res.status(201).json({ mensaje: 'Cliente creado exitosamente' });
+  } catch (error) {
+      console.error("Error al crear cliente:", error); // Log del error al crear el cliente
+      res.status(500).json({ error: error.message }); // Detalles del error
+  }
+};
+
+// Actualizar clientes existentes
+exports.updateClient = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { Nombre, Apellido, Telefono, Correo } = req.body;
+
+  // Validación del ID del cliente antes de actualizar
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID inválido" });
+  }
+  // Validación de Correo Electrónico
+  if (Correo && !validator.isEmail(Correo)) {
+    return res.status(400).json({ error: "Correo electrónico inválido" });
+  }
+
+  try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+          .input('id', sql.Int, id)
+          .input('Nombre', sql.NVarChar, Nombre)
+          .input('Apellido', sql.NVarChar, Apellido)
+          .input('Telefono', sql.NVarChar, Telefono)
+          .input('Correo', sql.NVarChar, Correo)
+          .query(`
+              UPDATE Clientes
+              SET Nombre = @Nombre, Apellido = @Apellido, Telefono = @Telefono, Correo = @Correo 
+              WHERE id = @id
+          `);
+
+      if (result.rowsAffected[0] === 0) {
+          return res.status(404).json({ message: 'Cliente no encontrado' });
+      }
+      res.json({ message: 'Cliente actualizado exitosamente' });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+
+// Eliminar clientes 
+exports.deleteClient = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+          .input('id', sql.Int, id)
+          .query('DELETE FROM Clientes WHERE id = @id');
+
+      if (result.rowsAffected[0] === 0) {
+          return res.status(404).json({ message: 'Cliente no encontrado' });
+      }
+
+      res.json({ message: 'Cliente eliminado exitosamente' });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+

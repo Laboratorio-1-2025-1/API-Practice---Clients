@@ -1,19 +1,19 @@
-// routes/clienttRoutes.js 
+// routes/clientRoutes.js 
 const express = require('express'); 
 const router = express.Router(); 
 const clientController = require('../controllers/clientController'); 
 
-// Obtener todos los clientes 
-router.get('/', clientController.getAllClients); 
+// Consultar clientes 
+router.get('/', clientController.searchClient); 
 
-// Obtener un cliente por ID 
-router.get('/:id', clientController.getClientById); 
+// Consultar un cliente por ID 
+router.get('/:id', clientController.searchClientById); 
 
 // Crear un nuevo cliente 
-router.post('/', clientController.createClient); 
+router.post('/', clientController.newClient); 
 
 // Actualizar un cliente existente 
-router.put('/:id', clientController.updateClient); 
+router.put('/:id', clientController.updateClient);
 
 // Eliminar un cliente 
 router.delete('/:id', clientController.deleteClient);

@@ -4,6 +4,7 @@ const productRoutes = require('./routes/productRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const app = express(); 
 const PORT = process.env.PORT || 3000; 
+const { poolPromise } = require('./db'); 
 
 // Middleware para parsear JSON en las peticiones 
 app.use(express.json()); 
